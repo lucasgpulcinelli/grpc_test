@@ -1,0 +1,17 @@
+
+syntax = "proto3";
+
+option go_package = "github.com/lucasgpulcinelli/grpc_test/functions";
+package functions;
+
+service Echo {
+    rpc EchoStr(EchoRequest) returns (EchoReply) {}
+}
+
+message EchoRequest {
+    string str = 1;
+}
+
+message EchoReply {
+    string str = 1;
+}
