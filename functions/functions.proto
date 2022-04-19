@@ -1,7 +1,7 @@
 
 syntax = "proto3";
 
-option go_package = "github.com/lucasgpulcinelli/grpc_test";
+option go_package = "github.com/lucasgpulcinelli/grpc_test/functions";
 package functions;
 
 service Echo {

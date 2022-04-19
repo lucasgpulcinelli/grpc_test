@@ -1,9 +1,8 @@
 FROM golang:alpine
-RUN apk add git
+RUN apk update && apk add git
 WORKDIR /server
-COPY go.mod go.sum server.go ./
-RUN go mod download
-RUN go build .
+COPY build.sh .
+RUN sh build.sh
 
 FROM alpine:latest
 COPY --from=0 /server/server .
