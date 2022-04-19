@@ -4,7 +4,7 @@
 // - protoc             v3.19.4
 // source: functions.proto
 
-package functions
+package grpc_test
 
 import (
 	context "context"
