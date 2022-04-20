@@ -1,7 +1,11 @@
 FROM golang:alpine
-ARG GRPC_TEST_VERSION=v0.0.1
-RUN go install github.com/lucasgpulcinelli/grpc_test/client@$GRPC_TEST_VERSION
+WORKDIR /grpc/
+COPY functions /grpc/functions/
+COPY client /grpc/client/
+COPY go.mod go.sum /grpc/
+RUN go build -v -o /grpc/main /grpc/client/
 
 FROM alpine:latest
-COPY --from=0 /go/bin/client .
-CMD ["./client"]
+COPY --from=0 /grpc/main .
+ENV PORT 50501
+CMD ["./main"]

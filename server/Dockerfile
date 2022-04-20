@@ -1,10 +1,11 @@
 FROM golang:alpine
-RUN apk update && apk add git
-WORKDIR /server
-COPY build.sh .
-RUN sh build.sh
+WORKDIR /grpc/
+COPY functions /grpc/functions/
+COPY server /grpc/server/
+COPY go.mod go.sum /grpc/
+RUN go build -v -o /grpc/main /grpc/server/
 
 FROM alpine:latest
-COPY --from=0 /server/server .
+COPY --from=0 /grpc/main .
 ENV PORT 50501
-CMD ["./server"]
+CMD ["./main"]
