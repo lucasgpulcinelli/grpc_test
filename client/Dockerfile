@@ -1,11 +1,15 @@
 FROM golang:alpine
 WORKDIR /grpc/
-COPY functions /grpc/functions/
-COPY client /grpc/client/
+
 COPY go.mod go.sum /grpc/
+COPY functions /grpc/functions/
+
+COPY client /grpc/client/
 RUN go build -v -o /grpc/main /grpc/client/
 
+
 FROM alpine:latest
+ENV ADDR grpc_server:50501
+
 COPY --from=0 /grpc/main .
-ENV PORT 50501
-CMD ["./main"]
+CMD ["sh", "-c", "./main --addr $ADDR"]
