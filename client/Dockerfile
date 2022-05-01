@@ -12,4 +12,5 @@ FROM alpine:latest
 ENV ADDR grpc_server:50501
 
 COPY --from=0 /grpc/main .
-CMD ["sh", "-c", "./main --addr $ADDR"]
+ENTRYPOINT ["./main"]
+CMD ["--echotype=all", "world", "5 world", "000", "111", "222"]

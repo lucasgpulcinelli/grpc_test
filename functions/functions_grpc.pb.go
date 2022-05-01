@@ -22,7 +22,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EchoClient interface {
-	EchoStr(ctx context.Context, in *EchoRequest, opts ...grpc.CallOption) (*EchoReply, error)
+	EchoStr(ctx context.Context, in *EchoData, opts ...grpc.CallOption) (*EchoData, error)
+	EchoCounter(ctx context.Context, in *EchoData, opts ...grpc.CallOption) (Echo_EchoCounterClient, error)
+	ConcatEchos(ctx context.Context, opts ...grpc.CallOption) (Echo_ConcatEchosClient, error)
+	PermuteEcho(ctx context.Context, opts ...grpc.CallOption) (Echo_PermuteEchoClient, error)
 }
 
 type echoClient struct {
@@ -33,8 +36,8 @@ func NewEchoClient(cc grpc.ClientConnInterface) EchoClient {
 	return &echoClient{cc}
 }
 
-func (c *echoClient) EchoStr(ctx context.Context, in *EchoRequest, opts ...grpc.CallOption) (*EchoReply, error) {
-	out := new(EchoReply)
+func (c *echoClient) EchoStr(ctx context.Context, in *EchoData, opts ...grpc.CallOption) (*EchoData, error) {
+	out := new(EchoData)
 	err := c.cc.Invoke(ctx, "/functions.Echo/EchoStr", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -42,11 +45,108 @@ func (c *echoClient) EchoStr(ctx context.Context, in *EchoRequest, opts ...grpc.
 	return out, nil
 }
 
+func (c *echoClient) EchoCounter(ctx context.Context, in *EchoData, opts ...grpc.CallOption) (Echo_EchoCounterClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Echo_ServiceDesc.Streams[0], "/functions.Echo/EchoCounter", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &echoEchoCounterClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Echo_EchoCounterClient interface {
+	Recv() (*EchoData, error)
+	grpc.ClientStream
+}
+
+type echoEchoCounterClient struct {
+	grpc.ClientStream
+}
+
+func (x *echoEchoCounterClient) Recv() (*EchoData, error) {
+	m := new(EchoData)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *echoClient) ConcatEchos(ctx context.Context, opts ...grpc.CallOption) (Echo_ConcatEchosClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Echo_ServiceDesc.Streams[1], "/functions.Echo/ConcatEchos", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &echoConcatEchosClient{stream}
+	return x, nil
+}
+
+type Echo_ConcatEchosClient interface {
+	Send(*EchoData) error
+	Recv() (*EchoData, error)
+	grpc.ClientStream
+}
+
+type echoConcatEchosClient struct {
+	grpc.ClientStream
+}
+
+func (x *echoConcatEchosClient) Send(m *EchoData) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *echoConcatEchosClient) Recv() (*EchoData, error) {
+	m := new(EchoData)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *echoClient) PermuteEcho(ctx context.Context, opts ...grpc.CallOption) (Echo_PermuteEchoClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Echo_ServiceDesc.Streams[2], "/functions.Echo/PermuteEcho", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &echoPermuteEchoClient{stream}
+	return x, nil
+}
+
+type Echo_PermuteEchoClient interface {
+	Send(*EchoData) error
+	Recv() (*EchoData, error)
+	grpc.ClientStream
+}
+
+type echoPermuteEchoClient struct {
+	grpc.ClientStream
+}
+
+func (x *echoPermuteEchoClient) Send(m *EchoData) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *echoPermuteEchoClient) Recv() (*EchoData, error) {
+	m := new(EchoData)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // EchoServer is the server API for Echo service.
 // All implementations must embed UnimplementedEchoServer
 // for forward compatibility
 type EchoServer interface {
-	EchoStr(context.Context, *EchoRequest) (*EchoReply, error)
+	EchoStr(context.Context, *EchoData) (*EchoData, error)
+	EchoCounter(*EchoData, Echo_EchoCounterServer) error
+	ConcatEchos(Echo_ConcatEchosServer) error
+	PermuteEcho(Echo_PermuteEchoServer) error
 	mustEmbedUnimplementedEchoServer()
 }
 
@@ -54,8 +154,17 @@ type EchoServer interface {
 type UnimplementedEchoServer struct {
 }
 
-func (UnimplementedEchoServer) EchoStr(context.Context, *EchoRequest) (*EchoReply, error) {
+func (UnimplementedEchoServer) EchoStr(context.Context, *EchoData) (*EchoData, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EchoStr not implemented")
+}
+func (UnimplementedEchoServer) EchoCounter(*EchoData, Echo_EchoCounterServer) error {
+	return status.Errorf(codes.Unimplemented, "method EchoCounter not implemented")
+}
+func (UnimplementedEchoServer) ConcatEchos(Echo_ConcatEchosServer) error {
+	return status.Errorf(codes.Unimplemented, "method ConcatEchos not implemented")
+}
+func (UnimplementedEchoServer) PermuteEcho(Echo_PermuteEchoServer) error {
+	return status.Errorf(codes.Unimplemented, "method PermuteEcho not implemented")
 }
 func (UnimplementedEchoServer) mustEmbedUnimplementedEchoServer() {}
 
@@ -71,7 +180,7 @@ func RegisterEchoServer(s grpc.ServiceRegistrar, srv EchoServer) {
 }
 
 func _Echo_EchoStr_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EchoRequest)
+	in := new(EchoData)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -83,9 +192,82 @@ func _Echo_EchoStr_Handler(srv interface{}, ctx context.Context, dec func(interf
 		FullMethod: "/functions.Echo/EchoStr",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EchoServer).EchoStr(ctx, req.(*EchoRequest))
+		return srv.(EchoServer).EchoStr(ctx, req.(*EchoData))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _Echo_EchoCounter_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(EchoData)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(EchoServer).EchoCounter(m, &echoEchoCounterServer{stream})
+}
+
+type Echo_EchoCounterServer interface {
+	Send(*EchoData) error
+	grpc.ServerStream
+}
+
+type echoEchoCounterServer struct {
+	grpc.ServerStream
+}
+
+func (x *echoEchoCounterServer) Send(m *EchoData) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _Echo_ConcatEchos_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(EchoServer).ConcatEchos(&echoConcatEchosServer{stream})
+}
+
+type Echo_ConcatEchosServer interface {
+	Send(*EchoData) error
+	Recv() (*EchoData, error)
+	grpc.ServerStream
+}
+
+type echoConcatEchosServer struct {
+	grpc.ServerStream
+}
+
+func (x *echoConcatEchosServer) Send(m *EchoData) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *echoConcatEchosServer) Recv() (*EchoData, error) {
+	m := new(EchoData)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func _Echo_PermuteEcho_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(EchoServer).PermuteEcho(&echoPermuteEchoServer{stream})
+}
+
+type Echo_PermuteEchoServer interface {
+	Send(*EchoData) error
+	Recv() (*EchoData, error)
+	grpc.ServerStream
+}
+
+type echoPermuteEchoServer struct {
+	grpc.ServerStream
+}
+
+func (x *echoPermuteEchoServer) Send(m *EchoData) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *echoPermuteEchoServer) Recv() (*EchoData, error) {
+	m := new(EchoData)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // Echo_ServiceDesc is the grpc.ServiceDesc for Echo service.
@@ -100,6 +282,24 @@ var Echo_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Echo_EchoStr_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "EchoCounter",
+			Handler:       _Echo_EchoCounter_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "ConcatEchos",
+			Handler:       _Echo_ConcatEchos_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "PermuteEcho",
+			Handler:       _Echo_PermuteEcho_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "functions.proto",
 }

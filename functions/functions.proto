@@ -5,13 +5,12 @@ option go_package = "github.com/lucasgpulcinelli/grpc_test/functions";
 package functions;
 
 service Echo {
-    rpc EchoStr(EchoRequest) returns (EchoReply) {}
+    rpc EchoStr(EchoData) returns (EchoData) {}
+    rpc EchoCounter(EchoData) returns (stream EchoData) {}
+    rpc ConcatEchos(stream EchoData) returns (stream EchoData) {}
+    rpc PermuteEcho(stream EchoData) returns (stream EchoData) {}
 }
 
-message EchoRequest {
-    string str = 1;
-}
-
-message EchoReply {
+message EchoData {
     string str = 1;
 }
