@@ -17,8 +17,8 @@ After running both executables (first the sever then the client) it is possible 
 ## Running with Docker
 The project can be converted to docker images with the commands:
 
-`docker build -f server/Dockerfile -t grpc_test/server .`
-`docker build -f client/Dockerfile -t grpc_test/client .`
+`docker build -f server/Dockerfile -t grpc-server .`
+`docker build -f client/Dockerfile -t grpc-client .`
 
 Creating a proper local network for both containers to communicate is necessary:
 
@@ -26,9 +26,9 @@ Creating a proper local network for both containers to communicate is necessary:
 
 Running both containers is 
 
-`docker run -d --net grpc --name grpc_server -p 50501:50501 grpc_test/server:latest`
-`docker run --net grpc grpc_test/client:latest`
+`docker run -d --net grpc --name grpc-server -p 50501:50501 grpc-server:latest`
+`docker run --net grpc grpc-client:latest`
 
 It should be seen the same as in the local case, however, as the server is running in detached mode to access it's logs:
 
-`docker logs grpc_server`
+`docker logs grpc-server`

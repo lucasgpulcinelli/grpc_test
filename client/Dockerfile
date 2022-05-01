@@ -9,7 +9,7 @@ RUN go build -v -o /grpc/main /grpc/client/
 
 
 FROM alpine:latest
-ENV ADDR grpc_server:50501
+ENV ADDR grpc-server:50501
 
 COPY --from=0 /grpc/main .
 ENTRYPOINT ["./main"]
