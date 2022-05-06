@@ -9,29 +9,59 @@ spec:
   selector:
     app: grpc-server
   ports:
-    - port: 50501
+    - name: grpc
+      port: 50501
       targetPort: 50501
   type: ClusterIP
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: grpc-server
+  name: grpc-server-v1
   namespace: grpc
   labels:
     app: grpc-server
+    version: v1
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: grpc-server
+      version: v1
   template:
     metadata:
       labels:
         app: grpc-server
+        version: v1
     spec:
       containers:
       - name: grpc-server
-        image: lucasegp/grpc-server:latest
+        image: lucasegp/grpc-server:v1
+        ports:
+        - containerPort: 50501
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grpc-server-v2
+  namespace: grpc
+  labels:
+    app: grpc-server
+    version: v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grpc-server
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: grpc-server
+        version: v2
+    spec:
+      containers:
+      - name: grpc-server
+        image: lucasegp/grpc-server:v2
         ports:
         - containerPort: 50501
